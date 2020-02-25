@@ -4,6 +4,7 @@
 
 import pandas as pd
 import math
+import os
 #data for control run
 data0=pd.read_csv('mbr000/odb_ccma/CCMA/obs_1_11_1.dat',sep=' ')
 #some extra calcs 
@@ -17,17 +18,27 @@ data0=pd.read_csv('mbr000/odb_ccma/CCMA/obs_1_11_1.dat',sep=' ')
 
 mems=[str(i).zfill(3) for i in range(1,10)]
 fg_ctrl_mean = data0['fg_depar@body'].mean()
+#print(data0.columns)
 #header of the form:
 #statid@hdr varno@body vertco_reference_1@body obsvalue@body an_depar@body fg_depar@body obs_error@errstat
-
-for station in data0['statid@hdr'].values:
+#statid@hdr
+for k,station in enumerate(data0['statid@hdr']):
     print("Going through station %d"%station)
+    fg_ctrl = data0['fg_depar@body'].values[k]
+    diff2_station = 0
     for mem in mems:
         ifile=os.path.join('mbr'+mem+'/odb_ccma/CCMA/','mbr'+mem+'_obs_1_11_1.dat')
         data = pd.read_csv(ifile,sep=' ')
+        #select only the station in member which matches station in control run list
         mem_sel = data[data['statid@hdr'] == station]
         if not mem_sel.empty:
-            print("Station found in member %d"%mem)
-            fg_mem_mean = mem_sel['fg_depar@body'].mean()
-            diff2 = (fg_ctrl_mean - fg_mem_mean)**2
+            print("Station found in member %s"%mem)
+            #fg_mem_mean = mem_sel['fg_depar@body'].mean()
+            fg_mem = mem_sel['fg_depar@body']
+            diff2 = (fg_ctrl - fg_mem)**2
+            diff2_station += diff2
+            #print("Difference squared %g"%diff2)
+            #diff2 = (fg_ctrl_mean - fg_mem_mean)**2
         #fg_ctrl_mem = (fg_ctrl_mean - mean()*fg_mean)**2
+    diff_total = diff2_station/len(mems)    
+    print("Total difference for station %d: %g"%(station,diff_total))
