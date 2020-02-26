@@ -1,5 +1,7 @@
 #!/bin/bash
-#go through all members for a given date
+#go through all members for a given date and fetch
+#the odb data
+
 days=$($(seq -w 1 1 30))
 months=$($(seq -w 4 1 5))
 for year in 2017;do
