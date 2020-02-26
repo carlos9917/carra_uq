@@ -2,7 +2,7 @@ import sys
 from itertools import islice
 
 
-searchfile = open("uq_data/HM_Date_2012070100.html", "r")
+searchfile = open("./HM_Date_2012070100.html", "r")
 for line in searchfile:
     if ('Obstype     ') in line: 
         #the following line will store the next two lines in a list
