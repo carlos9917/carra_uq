@@ -6,9 +6,16 @@
 #go through all members for a given date and fetch
 #the odb data and untar it, create odb tables with dcgen
 
+function call_odb ()
+{
+odbsql -q 'SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == $obstype AND codetype == $codetype AND varno == 1' |sed "s/'//g" | awk '{$2=$2};1' >& mbr${mem}_obs_1_11_1.dat
+echo "SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == $obstype AND codetype == $codetype AND varno == 1"
+}
+
 module load odb
 wrkdir=$PWD
 days=($(seq -w 1 1 30))
+obs=(11 12 13)
 months=($(seq -w 4 1 5))
 echo ${months[@]}
 for year in 2012;do
@@ -34,6 +41,9 @@ for year in 2012;do
       cd -
       rm -f bdstrategy odb.tar odb_can.tar odb_can_merge.tar odb_can_ori.tar odb_ccma.tar odbvar.tar
       cd $wrkdir/$year/$month/$day/$init
+      for obstype in ${obs[@]}; do
+	      call_odb
+      done
       #echo $PWD
 	  #cd -
     done #mem
