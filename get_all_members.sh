@@ -16,6 +16,7 @@ for year in 2012;do
     #for day in `seq -w 1 1 30`; do
     for day in 01; do
       for init in `seq -w 0 3 21`; do
+       [ ! -f logfiles.tar ] && ecp ec:/suza/harmonie/JB_CARRA_alpha2_$year/$year/$month/$day/$init/logfiles.tar $wrkdir/$year/$month/$day/$init/
 	for mem in 000 001 002 003 004 005 006 007 008 009; do
       #echo "mkdir -p $year/$month/$day/$init"
 	  dir=$wrkdir/$year/$month/$day/$init/mbr$mem
