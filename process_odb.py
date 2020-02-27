@@ -44,7 +44,7 @@ def calc_one_init(fdate):
                 #diff2 = (fg_ctrl_mean - fg_mem_mean)**2
             #fg_ctrl_mem = (fg_ctrl_mean - mean()*fg_mean)**2
         diff_total = diff2_station/len(mems)    
-        print("Total difference for station %d and init 00: %g"%(station,diff_total))
+        print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %d and init 00: %g"%(station,diff_total))
 
 def calc_all_init(fdate):
 
@@ -114,7 +114,7 @@ def calc_all_init(fdate):
     for station in diff2_init['station']:
         diff2_total[station] = diff2_init[diff2_init['station']==station]['diff2'].mean()
         #print(diff2_total[station]['diff2'])
-        print("Total squared difference for station %d for all init times: %g"%(int(station),diff2_total[station]))
+        print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %d for all init times: %g"%(int(station),diff2_total[station]))
         total+=diff2_total[station]
     print("mean of (fg_ctrl - fg_mem)^2 over all stations: %g"%diff2_init.diff2.mean())
     print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())
