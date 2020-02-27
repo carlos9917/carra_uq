@@ -114,11 +114,11 @@ def calc_all_init(fdate):
     for station in diff2_init['station']:
         diff2_total[station] = diff2_init[diff2_init['station']==station]['diff2'].mean()
         #print(diff2_total[station]['diff2'])
-        print("Total difference for station %d for all init times: %g"%(int(station),diff2_total[station]))
+        print("Total squared difference for station %d for all init times: %g"%(int(station),diff2_total[station]))
         total+=diff2_total[station]
-    print("mean over all stations %g"%diff2_init.diff2.mean())
-    print("mean of first guess departure for control run %g"%fg_dep2_ctrl.fg_dep2.mean())
-    print("mean of analysis minus first guess departure for control run %g"%an_fg_ctrl.an_fg_dep.mean())
+    print("mean of (fg_ctrl - fg_mem)^2 over all stations: %g"%diff2_init.diff2.mean())
+    print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())
+    print("mean of an_dep*fg_dep for control run over all stations: %g"%an_fg_ctrl.an_fg_dep.mean())
     #dg_dep2_ctrl[str(station)+'_'+init] = fg_ctrl**2
 if __name__=='__main__':
     print("----------------------------------------------------------------------------------------")
