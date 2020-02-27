@@ -5,6 +5,7 @@
 import pandas as pd
 import math
 import os
+from collections import OrderedDict
 #data for control run
 #some extra calcs 
 #Rast=data['an_depar@body']*data['fg_depar@body']
@@ -19,12 +20,13 @@ import os
 #header of the form:
 #statid@hdr varno@body vertco_reference_1@body obsvalue@body an_depar@body fg_depar@body obs_error@errstat
 #statid@hdr
-def calc_one_init():
-    data0=pd.read_csv('mbr000/odb_ccma/CCMA/obs_1_11_1.dat',sep=' ')
+def calc_one_init(fdate):
+    yyyymmddii='/'.join([fdate,'00'])
+    data0=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_1_11_1.dat'),sep=' ')
     mems=[str(i).zfill(3) for i in range(1,10)]
     fg_ctrl_mean = data0['fg_depar@body'].mean()
     for k,station in enumerate(data0['statid@hdr']):
-        print("Going through station %d"%station)
+        #print("Going through station %d"%station)
         fg_ctrl = data0['fg_depar@body'].values[k]
         diff2_station = 0
         for mem in mems:
@@ -33,7 +35,7 @@ def calc_one_init():
             #select only the station in member which matches station in control run list
             mem_sel = data[data['statid@hdr'] == station]
             if not mem_sel.empty:
-                print("Station found in member %s"%mem)
+                #print("Station found in member %s"%mem)
                 #fg_mem_mean = mem_sel['fg_depar@body'].mean()
                 fg_mem = mem_sel['fg_depar@body']
                 diff2 = (fg_ctrl - fg_mem)**2
@@ -42,7 +44,7 @@ def calc_one_init():
                 #diff2 = (fg_ctrl_mean - fg_mem_mean)**2
             #fg_ctrl_mem = (fg_ctrl_mean - mean()*fg_mean)**2
         diff_total = diff2_station/len(mems)    
-        print("Total difference for station %d: %g"%(station,diff_total))
+        print("Total difference for station %d and init 00: %g"%(station,diff_total))
 
 def calc_all_init(fdate):
 
@@ -59,25 +61,40 @@ def calc_all_init(fdate):
         data_ref=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_1_11_1.dat'),sep=' ')   
         for k,station in enumerate(data_ref['statid@hdr']):
             diff2_station=0
-            fg_ctrl = data0['fg_depar@body'].values[k]
+            fg_ctrl = data_ref['fg_depar@body'].values[k]
             for mem in mems:
                 ifile=os.path.join(yyyymmddii,'mbr'+mem+'/odb_ccma/CCMA/mbr'+mem+'_obs_1_11_1.dat')
                 data = pd.read_csv(ifile,sep=' ')
                 #select only the station in member which matches station in control run list
                 mem_sel = data[data['statid@hdr'] == station]
                 if not mem_sel.empty:
-                    print("Station found in member %s"%mem)
+                    #print("Station %d found in member %s %s"%(station,yyyymmddii,mem))
                     fg_mem = mem_sel['fg_depar@body']
                     diff2_station += (fg_ctrl - fg_mem)**2
+                else:
+                    print("Warning: NO data found for station in member %s %s"%(yyyymmddii,mem))
             #diff2_init[station+'_'+init] = diff2_station/len(mems)    
-            if init == '00': # create dataframe
-                diff2_init=pd.Dataframe({'station':station,'init':init,'diff2':diff2_station/len(mems)})
+            if init == '00' and k==0: # create dataframe
+                print("First data frame created (this should only happen once!!!)")
+                diff2_init=pd.DataFrame({'station':station,'init':init,'diff2':diff2_station/len(mems)})
             else:
-                diff2_init.append({'station':station,'init':init,'diff2':diff2_station/len(mems)})
-               
+                add_data=pd.DataFrame({'station':station,'init':init,'diff2':diff2_station/len(mems)})
+                diff2_init = diff2_init.append(add_data,ignore_index=True)
     #print("Total difference for station %d at init time %s: %g"%(station,init,diff_total))
     #finally calculate mean of all init times for all stations that 
     #are present during the whole set of init times
+    diff2_total=OrderedDict()
+    for station in diff2_init['station']:
+        diff2_total[station] = diff2_init[diff2_init['station']==station]['diff2'].mean()
+        #print(diff2_total[station]['diff2'])
+        print("Total difference for station %d for all init times: %g"%(int(station),diff2_total[station]))
 
 if __name__=='__main__':
+    print("----------------------------------------------------------------------------------------")
+    print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and init=00")
+    print("----------------------------------------------------------------------------------------")
+    calc_one_init('2012/07/01')
+    print("----------------------------------------------------------------------------------------")
+    print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and all init times")
+    print("----------------------------------------------------------------------------------------")
     calc_all_init('2012/07/01')
