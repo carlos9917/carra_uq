@@ -51,16 +51,9 @@ def calc_all_init(fdate):
     init_times=[str(i).zfill(2) for i in range(0,22,3)]
     mems=[str(i).zfill(3) for i in range(1,10)]
 
-    #for k,station in enumerate(data_ref['statid@hdr']):
-    #    print("Going through station %d"%station)
-    #    diff2_station = 0
-    #for init in init_times:
-    #diff2_init={} #store all the differences for a particular init time
-    #diff2_save={}
     count=0
     save_init=[];save_stations=[];save_diff2=[]
     save_fg_dep2=[];save_an_fg=[]
-    #fg_dep2_ctrl={}
     for init in init_times:
         yyyymmddii='/'.join([fdate,init])
         data_ref=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_1_11_1.dat'),sep=' ')   
@@ -68,16 +61,6 @@ def calc_all_init(fdate):
             diff2_station=0
             fg_ctrl = data_ref['fg_depar@body'].values[k]
             an_fg_dep_ctrl = data_ref['an_depar@body'].values[k]*fg_ctrl
-            #diff2_save[str(station)]=fg_ctrl**2
-            #if k==0 and init=='00':
-            #    fg_dep2_ctrl=pd.DataFrame({'station':station,'init':init,'fg_dep2':fg_ctrl**2},index=[count])
-            #    an_fg_ctrl=pd.DataFrame({'station':station,'init':init,'an_fg_dep':an_fg_dep_ctrl},index=[count])
-            #else:        
-            #    count+=1
-            #    add_data=pd.DataFrame({'station':station,'init':init,'fg_dep2':fg_ctrl**2},index=[count])
-            #    fg_dep2_ctrl=fg_dep2_ctrl.append(add_data,ignore_index=True)
-            #    add_data=pd.DataFrame({'station':station,'init':init,'an_fg_dep':an_fg_dep_ctrl},index=[count])
-            #    an_fg_ctrl=an_fg_ctrl.append(add_data,ignore_index=True)
             for mem in mems:
                 ifile=os.path.join(yyyymmddii,'mbr'+mem+'/odb_ccma/CCMA/mbr'+mem+'_obs_1_11_1.dat')
                 data = pd.read_csv(ifile,sep=' ')
@@ -89,13 +72,6 @@ def calc_all_init(fdate):
                     diff2_station += (fg_ctrl - fg_mem)**2
                 else:
                     print("Warning: NO data found for station in member %s %s"%(yyyymmddii,mem))
-            #diff2_init[station+'_'+init] = diff2_station/len(mems)    
-            #if init == '00' and k==0: # create dataframe
-            #    print("First data frame created (this should only happen once!!!)")
-            #    diff2_init=pd.DataFrame({'station':station,'init':init,'diff2':diff2_station/len(mems)})
-            #else:
-            #    add_data=pd.DataFrame({'station':station,'init':init,'diff2':diff2_station/len(mems)})
-            #    diff2_init = diff2_init.append(add_data,ignore_index=True)
             save_init.append(init)    
             save_stations.append(station)
             save_diff2.append(diff2_station/len(mems))
@@ -104,11 +80,9 @@ def calc_all_init(fdate):
     diff2_init=pd.DataFrame({'station':save_stations,'init':save_init,'diff2':save_diff2})            
     fg_dep2_ctrl=pd.DataFrame({'station':save_stations,'init':save_init, 'fg_dep2':save_fg_dep2})
     an_fg_ctrl=pd.DataFrame({'station':save_stations,'init':save_init,'an_fg_dep':save_an_fg})
-    #print("Total difference for station %d at init time %s: %g"%(station,init,diff_total))
-    #finally calculate mean of all init times for all stations that 
+
+    #Finally calculate mean of all init times for all stations that 
     #are present during the whole set of init times
-    #fp_dep2_ctrl=pd.DataFrame({'station':data_ref['statid@hdr'],
-    #                           'init':
     diff2_total=OrderedDict()
     total=0
     for station in diff2_init['station']:
@@ -120,12 +94,27 @@ def calc_all_init(fdate):
     print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())
     print("mean of an_dep*fg_dep for control run over all stations: %g"%an_fg_ctrl.an_fg_dep.mean())
     #dg_dep2_ctrl[str(station)+'_'+init] = fg_ctrl**2
+
+
 if __name__=='__main__':
+    import argparse
+    from argparse import RawTextHelpFormatter
+    parser = argparse.ArgumentParser(description=''' Example usage: python3 process_odb.py -d 2019/03/26 ''',formatter_class=RawTextHelpFormatter)
+
+    #default starting date is first day of simulations
+    parser.add_argument('-d','--date',metavar='Date to process (YYYY/MM/DD)',
+                        type=str,
+                        default=None,
+                        required=True)
+
+    args = parser.parse_args()
+
     print("----------------------------------------------------------------------------------------")
     print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and init=00")
     print("----------------------------------------------------------------------------------------")
-    calc_one_init('2012/07/01')
+    calc_one_init(args.date) #'2012/07/01')
+
     print("----------------------------------------------------------------------------------------")
     print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and all init times")
     print("----------------------------------------------------------------------------------------")
-    calc_all_init('2012/07/01')
+    calc_all_init(args.date) #'2012/07/01')

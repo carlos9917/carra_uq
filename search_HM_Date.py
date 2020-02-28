@@ -1,23 +1,29 @@
 import sys
 from itertools import islice
 
-def search_all_init():
-    init=[str(i).
+def search_all_init(fdate):
+    '''
+    Search in the HM_Date* file for this date
+    '''
+    init_times=[str(i).zfill(2) for i in range(0,22,3)]
     obs_code={}
-    searchfile = open("./uq_data/HM_Date_2012070100.html", "r")
-    for line in searchfile:
-        if ('Obstype     ') in line: 
-            #the following line will store the next two lines in a list
-            #the first element will be the line ------
-            next_two=list(islice(searchfile, 2))
-            obstype = line.split()[1]
-            if 'Codetype' in next_two[1]:
-                #print(line)
-                #print(next_two[1])
-                #print(next_two[1].split())
-                codetype=next_two[1].split()[1]
-                #print("Obstype: %s Codetype: %s"%(obstype,codetype))
-                obs_code[obstype]=codetype
+    for init in init_times:
+        yyyymmddii='/'.join([fdate,init])
+
+        searchfile = open(os.path.join(yyyymmddii,"HM_Date_"+yyyymmddii.replace('/','')+".html", "r")
+        for line in searchfile:
+            if ('Obstype     ') in line: 
+                #the following line will store the next two lines in a list
+                #the first element will be the line ------
+                next_two=list(islice(searchfile, 2))
+                obstype = line.split()[1]
+                if 'Codetype' in next_two[1]:
+                    #print(line)
+                    #print(next_two[1])
+                    #print(next_two[1].split())
+                    codetype=next_two[1].split()[1]
+                    #print("Obstype: %s Codetype: %s"%(obstype,codetype))
+                    obs_code[obstype]=codetype
 
 def search_single():
     obs_code={}
@@ -53,5 +59,17 @@ def run_sql():
         #print(cmd)
 
 if __name__=='__main__':
-    search_single()
+    import argparse
+    from argparse import RawTextHelpFormatter
+    parser = argparse.ArgumentParser(description=''' Example usage: python3 process_odb.py -d 2019/03/26 ''',formatter_class=RawTextHelpFormatter)
+
+    #default starting date is first day of simulations
+    parser.add_argument('-d','--date',metavar='Date to process (YYYY/MM/DD)',
+                        type=str,
+                        default=None,
+                        required=True)
+
+    args = parser.parse_args()
+    #grab the observation codes for all files in this date
+    obs_code = search_all_init(fdate)
 
