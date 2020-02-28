@@ -1,3 +1,5 @@
+#Crude script to generate the sql commands to call
+#all different variables available in the HM_Date files
 import sys
 from itertools import islice
 
