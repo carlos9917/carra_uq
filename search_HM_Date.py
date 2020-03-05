@@ -18,8 +18,7 @@ def search_all_init(fdate):
         yyyymmddii='/'.join([fdate,init])
         print("searching %s"%yyyymmddii)
         fname=os.path.join(yyyymmddii,"HM_Date_"+yyyymmddii.replace('/','')+".html")
-        searchfile = open(fname, "r")
-        obs_types[fname],all_data[fname]=search_single(fname)
+        obs_types[yyyymmddii],all_data[yyyymmddii]=search_single(fname)
     return obs_types,all_data
 
 def search_all_init_old(fdate):
@@ -164,19 +163,25 @@ def search_single(sfile):
     return obs_types,all_data
 
 #commands to call
-def run_sql(data):
+def run_sql(data,key_date):
+    '''
+    fnction assumes script sitting in top path of form YYYY/MM/DD/HH
+    given by key_date
+    '''
     import subprocess
     mems=[str(i).zfill(3) for i in range(1,10)]
     var_codes={'Z':1,'U':3,'T':2,'Q':7}
+    cdir=os.getcwd()
     for mem in mems:
+        os.chdir(os.path.join(key_date,"mbr"+mem))
         for k in data['Obstype'].index:
             obstype=str(data['Obstype'].loc[k])
             codetype=str(data['Codetype'].loc[k])
             varno=str(var_codes[data['Variable'].loc[k]])
             fstring='_'.join([obstype,codetype,varno])+'.dat'
             cmd='''odbsql -q "SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == '''+obstype+''' AND codetype == '''+codetype+''' AND varno == '''+varno+ '''" |sed "s/'//g" | awk '{$2=$2};1' >& mbr'''+mem+fstring   #'''_obs_1_11_1.dat'''
-            #ret=subprocess(cmd,shell=True)
-            print(cmd)
+            ret=subprocess(cmd,shell=True)
+        os.chdir(cdir)
 
 if __name__=='__main__':
     import argparse
@@ -209,6 +214,6 @@ if __name__=='__main__':
         data=data.drop_duplicates()
         print(data)
         print("Commands for %s"%key)
-        run_sql(data)
+        run_sql(data,key)
 
 
