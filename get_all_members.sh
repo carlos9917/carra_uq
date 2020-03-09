@@ -9,14 +9,16 @@
 module load odb
 module load python3
 wrkdir=$PWD
-days=($(seq -w 2 1 11))
+days=($(seq -w 10 1 11))
 months=($(seq -w 4 1 5))
 #echo ${months[@]}
 for year in 2012;do
   for month in 07; do
     #for day in `seq -w 1 1 30`; do
-    for day in ${days[@]}; do
-      for init in `seq -w 0 3 21`; do
+    #for day in ${days[@]}; do
+    for day in 05; do
+      for init in 18 21; do
+      #for init in `seq -w 0 3 21`; do
        #This part will be done separately.
        #[ ! -f logfiles.tar ] && ecp ec:/suza/harmonie/JB_CARRA_alpha2_$year/$year/$month/$day/$init/logfiles.tar $wrkdir/$year/$month/$day/$init/
        #cd $wrkdir/$year/$month/$day/$init/
@@ -26,10 +28,10 @@ for year in 2012;do
        #TODO: call python script to generate the odbsql commands for ALL members
        #cd -
 	for mem in 000 001 002 003 004 005 006 007 008 009; do
-	  dir=$wrkdir/$year/$month/$day/$init/mbr$mem
+	      dir=$wrkdir/$year/$month/$day/$init/mbr$mem
           [ ! -d $dir ] && mkdir -p $dir
           echo "Fetching data for $dir"    
-	  cd $dir
+	      cd $dir
           [ ! -f odb_stuff.tar ] && ecp ec:/suza/harmonie/JB_CARRA_alpha2_$year/$year/$month/$day/$init/mbr$mem/odb_stuff.tar .
           echo "untar"
           tar xvf odb_stuff.tar

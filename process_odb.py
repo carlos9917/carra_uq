@@ -46,8 +46,8 @@ def calc_one_init(fdate):
         diff_total = diff2_station/len(mems)    
         print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %d and init 00: %g"%(station,diff_total))
 
-def calc_all_init(fdate):
-
+def calc_all_init(fdate,obstype,codetype,varno):
+    obsCodeVar='_'.join([obstype,codetype,varno])
     init_times=[str(i).zfill(2) for i in range(0,22,3)]
     mems=[str(i).zfill(3) for i in range(1,10)]
 
@@ -56,13 +56,13 @@ def calc_all_init(fdate):
     save_fg_dep2=[];save_an_fg=[]
     for init in init_times:
         yyyymmddii='/'.join([fdate,init])
-        data_ref=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_1_11_1.dat'),sep=' ')   
+        data_ref=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_'+obsCodeVar+'.dat'),sep=' ')   
         for k,station in enumerate(data_ref['statid@hdr']):
             diff2_station=0
             fg_ctrl = data_ref['fg_depar@body'].values[k]
             an_fg_dep_ctrl = data_ref['an_depar@body'].values[k]*fg_ctrl
             for mem in mems:
-                ifile=os.path.join(yyyymmddii,'mbr'+mem+'/odb_ccma/CCMA/mbr'+mem+'_obs_1_11_1.dat')
+                ifile=os.path.join(yyyymmddii,'mbr'+mem+'/odb_ccma/CCMA/mbr'+mem+'_obs_'+obsCodeVar+'.dat')
                 data = pd.read_csv(ifile,sep=' ')
                 #select only the station in member which matches station in control run list
                 mem_sel = data[data['statid@hdr'] == station]
@@ -107,14 +107,31 @@ if __name__=='__main__':
                         default=None,
                         required=True)
 
+    parser.add_argument('-ot','--obstype',metavar='Obstype grib code',
+                        type=str,
+                        default='1',
+                        required=False)
+
+    parser.add_argument('-ct','--codetype',metavar='Codetype grib code',
+                        type=str,
+                        default='11',
+                        required=False)
+
+    parser.add_argument('-vn','--varno',metavar='Variable grib code',
+                        type=str,
+                        default='1',
+                        required=False)
+
     args = parser.parse_args()
+    codetype=args.codetype
+
+
+    #print("----------------------------------------------------------------------------------------")
+    #print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and init=00")
+    #print("----------------------------------------------------------------------------------------")
+    #calc_one_init(args.date) #'2012/07/01')
 
     print("----------------------------------------------------------------------------------------")
-    print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and init=00")
+    print("Calculating means for obstype == %s AND codetype == %s AND varno == %s and all init times"%(args.obstype,args.codetype,args.varno))
     print("----------------------------------------------------------------------------------------")
-    calc_one_init(args.date) #'2012/07/01')
-
-    print("----------------------------------------------------------------------------------------")
-    print("Calculating means for obstype == 1 AND codetype == 11 AND varno == 1 and all init times")
-    print("----------------------------------------------------------------------------------------")
-    calc_all_init(args.date) #'2012/07/01')
+    calc_all_init(args.date,args.obstype,args.codetype,args.varno) #'2012/07/01')

@@ -123,17 +123,21 @@ def search_single(sfile):
             if 'Codetype' in next_two[1]:
                 #print("creating array")
                 #save the next lines until it hits the end_line
+                codetype = next_two[1].split()[1]
                 inRecordingMode=True
                 lines_saved=[]
+        if 'Codetype' in line and inRecordingMode and relevantSection:
+            codetype = line.split()[1]
         elif end_line in line:
             inRecordingMode=False
 
         if inRecordingMode and relevantSection:
             #if saveVar and 'Variable' not in line and 'Codetype' not in line and end_line not in line:
             if saveVar and not any(string in line for string in stringsAvoid):
-                all_data['Obstype'] = np.append(all_data['Obstype'],obstype)
-                all_data['Codetype'] = np.append(all_data['Codetype'],next_two[1].split()[1])
                 output = [s.strip() for s in line.split('  ') if s]
+                #print("Saving Obstype,Codetype,Variable %s %s %s"%(obstype,codetype,output[0]))
+                all_data['Obstype'] = np.append(all_data['Obstype'],obstype)
+                all_data['Codetype'] = np.append(all_data['Codetype'],codetype)
                 all_data['Variable'] = np.append(all_data['Variable'],output[0])
             #print("recording")
             lines_saved.append(line)
@@ -169,24 +173,27 @@ def run_sql(data,key_date):
     given by key_date
     '''
     import subprocess
-    mems=[str(i).zfill(3) for i in range(1,10)]
+    mems=[str(i).zfill(3) for i in range(0,10)]
     var_codes={'Z':1,'U':3,'T':2,'Q':7}
     cdir=os.getcwd()
     for mem in mems:
-        os.chdir(os.path.join(key_date,"mbr"+mem))
+        os.chdir(os.path.join(key_date,"mbr"+mem+"/odb_ccma/CCMA"))
+        print(os.getcwd())
         for k in data['Obstype'].index:
             obstype=str(data['Obstype'].loc[k])
             codetype=str(data['Codetype'].loc[k])
             varno=str(var_codes[data['Variable'].loc[k]])
             fstring='_'.join([obstype,codetype,varno])+'.dat'
-            cmd='''odbsql -q "SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == '''+obstype+''' AND codetype == '''+codetype+''' AND varno == '''+varno+ '''" |sed "s/'//g" | awk '{$2=$2};1' >& mbr'''+mem+fstring   #'''_obs_1_11_1.dat'''
-            ret=subprocess(cmd,shell=True)
+            cmd='''odbsql -q "SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == '''+obstype+''' AND codetype == '''+codetype+''' AND varno == '''+varno+ '''" |sed "s/'//g" | awk '{$2=$2};1' >& mbr'''+mem+'_'+fstring   #'''_obs_1_11_1.dat'''
+            print(cmd)
+            ret=subprocess.check_output(cmd,shell=True)
         os.chdir(cdir)
+        print(os.getcwd())
 
 if __name__=='__main__':
     import argparse
     from argparse import RawTextHelpFormatter
-    parser = argparse.ArgumentParser(description=''' Example usage: python3 process_odb.py -d 2019/03/26 ''',formatter_class=RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(description=''' Example usage: python3 search_HM_Date -d 2019/03/26 ''',formatter_class=RawTextHelpFormatter)
 
     #default starting date is first day of simulations
     parser.add_argument('-d','--date',metavar='Date to process (YYYY/MM/DD)',
@@ -199,13 +206,17 @@ if __name__=='__main__':
     #obs_types = search_single("uq_data/HM_Date_2012070100.html")
     #grab the observation codesarg for all files in this date
     obs_types,all_data = search_all_init(args.date)
-    print("Obstype/Codetype pairs found in each file")
-    for key in obs_types.keys():
+    print("All the Obstype/Codetype/Variable pairs found in each file")
+    for key in all_data.keys():
         print(key)
-        for ot_key in obs_types[key].keys():
-            for ct in obs_types[key][ot_key][:]:
-                print("Obstype: %s Codetype: %s"%(ot_key,ct))
-        #print(obs_types[key])
+        data=pd.DataFrame(all_data[key])
+        print(data)
+    #for key in obs_types.keys():
+    #    print(key)
+    #    for ot_key in obs_types[key].keys():
+    #        for ct in obs_types[key][ot_key][:]:
+    #            print("Obstype: %s Codetype: %s"%(ot_key,ct))
+    #    #print(obs_types[key])
     print("---------------------------")     
     print("Check all Obstype,Codetype,Variable combinations")
     for key in all_data.keys():
