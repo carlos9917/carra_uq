@@ -50,19 +50,19 @@ def calc_all_init(fdate,obstype,codetype,varno):
     obsCodeVar='_'.join([obstype,codetype,varno])
     init_times=[str(i).zfill(2) for i in range(0,22,3)]
     mems=[str(i).zfill(3) for i in range(1,10)]
-
+    sdir="/scratch/ms/dk/nhd/carra_uq"
     count=0
     save_init=[];save_stations=[];save_diff2=[]
     save_fg_dep2=[];save_an_fg=[]
     for init in init_times:
         yyyymmddii='/'.join([fdate,init])
-        data_ref=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_'+obsCodeVar+'.dat'),sep=' ')   
+        data_ref=pd.read_csv(os.path.join(sdir,yyyymmddii+'/mbr000/odb_ccma/CCMA/mbr000_'+obsCodeVar+'.dat'),sep=' ')   
         for k,station in enumerate(data_ref['statid@hdr']):
             diff2_station=0
             fg_ctrl = data_ref['fg_depar@body'].values[k]
             an_fg_dep_ctrl = data_ref['an_depar@body'].values[k]*fg_ctrl
             for mem in mems:
-                ifile=os.path.join(yyyymmddii,'mbr'+mem+'/odb_ccma/CCMA/mbr'+mem+'_obs_'+obsCodeVar+'.dat')
+                ifile=os.path.join(yyyymmddii,'mbr'+mem+'/odb_ccma/CCMA/mbr'+mem+'_'+obsCodeVar+'.dat')
                 data = pd.read_csv(ifile,sep=' ')
                 #select only the station in member which matches station in control run list
                 mem_sel = data[data['statid@hdr'] == station]

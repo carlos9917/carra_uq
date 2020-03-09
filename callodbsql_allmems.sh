@@ -10,7 +10,7 @@ days=($(seq -w 2 1 11))
 wrkdir=$PWD
 for year in 2012;do
   for month in 07; do
-    for day in 02 03 04; do
+    for day in 01; do
     #for day in ${days[@]}; do
       python3 search_HM_Date.py -d "$year/$month/$day" >& ./$year/$month/$day/out_hm_search.txt
       #for init in `seq -w 0 3 21`; do
