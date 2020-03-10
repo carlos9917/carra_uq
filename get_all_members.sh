@@ -9,16 +9,16 @@
 module load odb
 module load python3
 wrkdir=$PWD
-days=($(seq -w 10 1 11))
+days=($(seq -w 1 1 11))
 months=($(seq -w 4 1 5))
 #echo ${months[@]}
 for year in 2012;do
   for month in 07; do
     #for day in `seq -w 1 1 30`; do
-    #for day in ${days[@]}; do
-    for day in 05; do
-      for init in 18 21; do
-      #for init in `seq -w 0 3 21`; do
+    for day in ${days[@]}; do
+    #for day in 05; do
+      #for init in 18 21; do
+      for init in `seq -w 0 3 21`; do
        #This part will be done separately.
        #[ ! -f logfiles.tar ] && ecp ec:/suza/harmonie/JB_CARRA_alpha2_$year/$year/$month/$day/$init/logfiles.tar $wrkdir/$year/$month/$day/$init/
        #cd $wrkdir/$year/$month/$day/$init/

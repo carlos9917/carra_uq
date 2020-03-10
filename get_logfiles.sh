@@ -6,12 +6,12 @@
 #retrieve all the logfiles from ecfs. Extract the HM_Date files
 
 wrkdir=$PWD
-days=($(seq -w 1 1 30))
+days=($(seq -w 4 1 11))
 months=($(seq -w 4 1 5))
 echo ${months[@]}
 for year in 2012;do
   for month in 07; do
-    for day in 02 03; do
+    for day in ${days[@]}; do
 	  cd $wrkdir/$year/$month/$day/
       for init in `seq -w 0 3 21`; do
 	  cd $init

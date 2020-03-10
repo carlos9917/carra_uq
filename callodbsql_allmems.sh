@@ -6,12 +6,11 @@
 
 module load odb
 module load python3
-days=($(seq -w 2 1 11))
+days=($(seq -w 4 1 11))
 wrkdir=$PWD
 for year in 2012;do
   for month in 07; do
-    for day in 01; do
-    #for day in ${days[@]}; do
+    for day in ${days[@]}; do
       python3 search_HM_Date.py -d "$year/$month/$day" >& ./$year/$month/$day/out_hm_search.txt
       #for init in `seq -w 0 3 21`; do
       #  for mem in 000 001 002 003 004 005 006 007 008 009; do
