@@ -196,21 +196,24 @@ def run_sql(data,key_date):
             fstring='_'.join([obstype,codetype,varno])+'.dat'
             cmd='''odbsql -q "SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == '''+obstype+''' AND codetype == '''+codetype+''' AND varno == '''+varno+ '''" |sed "s/'//g" | awk '{$2=$2};1' >& mbr'''+mem+'_'+fstring   #'''_obs_1_11_1.dat'''
             check_ofile="mbr"+mem+'_'+fstring
+            cmd_chmod="chmod 755 "+check_ofile
             stuff,hh=os.path.split(key_date) #check hh 
             if os.path.isfile(check_ofile):
                 print("Data already generated for %s"%check_ofile)
                 print("Skipping this sql command: ")
                 print(cmd)
-                continue
-            elif codetype == '36' and hh not in radisonde_init:
-                print("Data not available for Obstype/Codetype %s/%s on hour %s"%(obstype,codetype,hh))
-                print("Skipping this sql command: ")
-                print(cmd)
+                ret=subprocess.check_output(cmd_chmod,shell=True)
                 continue
             else:
                 print("Running command: ")
                 print(cmd)
                 ret=subprocess.check_output(cmd,shell=True)
+                ret=subprocess.check_output(cmd_chmod,shell=True)
+            #elif codetype == '36' and hh not in radisonde_init:
+            #    print("Data not available for Obstype/Codetype %s/%s on hour %s"%(obstype,codetype,hh))
+            #    print("Skipping this sql command: ")
+            #    print(cmd)
+            #    continue
         os.chdir(cdir)
         #print(os.getcwd())
 
@@ -249,10 +252,13 @@ if __name__=='__main__':
 
     args = parser.parse_args()
     clean_files = False # clean the output files
+    write_comb_only = False #write only the possible combinations of obstype,codetype,variable
     #short test to carry out locally 
     #obs_types = search_single("uq_data/HM_Date_2012070100.html")
     #grab the observation codesarg for all files in this date
     obs_types,all_data = search_all_init(args.date)
+
+    cdir=os.getcwd()
     print("All the Obstype/Codetype/Variable pairs found in each file")
     for key in all_data.keys():
         #print(key)
@@ -261,6 +267,11 @@ if __name__=='__main__':
         if clean_files:
             print("Cleaning all odbsql output for %s"%key)
             clean_sql_output(data,key)
+        elif write_comb_only:    
+            #write the possible combinations of obstype codetype varno to file
+            print("Writing only the possible obs/code/var combinations")
+            write_data=data.drop_duplicates()
+            write_data.to_csv(os.path.join(cdir,key+"/"+'obs_code_var_unique.dat'),sep=" ",index=False)
         else:
             print("Calling odbsql command for %s"%key)
             run_sql(data,key)

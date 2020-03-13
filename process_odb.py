@@ -21,6 +21,10 @@ from collections import OrderedDict
 #statid@hdr varno@body vertco_reference_1@body obsvalue@body an_depar@body fg_depar@body obs_error@errstat
 #statid@hdr
 def calc_one_init(fdate):
+    '''NOTE: this function needs to be updated
+       to reflect changes in output names. See calc_all_init below.
+       Currently not using
+    '''
     yyyymmddii='/'.join([fdate,'00'])
     data0=pd.read_csv(os.path.join(yyyymmddii,'mbr000/odb_ccma/CCMA/mbr000_obs_1_11_1.dat'),sep=' ')
     mems=[str(i).zfill(3) for i in range(1,10)]
@@ -101,6 +105,11 @@ def calc_all_init(fdate,obstype,codetype,varno):
     print("mean of an_dep*fg_dep for control run over all stations: %g"%an_fg_ctrl.an_fg_dep.mean())
     #dg_dep2_ctrl[str(station)+'_'+init] = fg_ctrl**2
 
+def loop_ocv(oct_comb):
+    '''
+    Loop through all obstype,codetype and varno cobminations
+    '''
+    pass
 
 if __name__=='__main__':
     import argparse

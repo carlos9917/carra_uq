@@ -13,6 +13,7 @@ for year in 2012;do
     for day in ${days[@]}; do
       echo "Going through $year/$month/$day"
       python3 search_HM_Date.py -d "$year/$month/$day" >& ./$year/$month/$day/out_hm_search.txt
+      chmod 755 ./$year/$month/$day/out_hm_search.txt
       #for init in `seq -w 0 3 21`; do
       #  for mem in 000 001 002 003 004 005 006 007 008 009; do
       #    echo "Doing member $year/$month/$day/$init/mbr$mem"
