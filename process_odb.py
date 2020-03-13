@@ -56,7 +56,13 @@ def calc_all_init(fdate,obstype,codetype,varno):
     save_fg_dep2=[];save_an_fg=[]
     for init in init_times:
         yyyymmddii='/'.join([fdate,init])
-        data_ref=pd.read_csv(os.path.join(sdir,yyyymmddii+'/mbr000/odb_ccma/CCMA/mbr000_'+obsCodeVar+'.dat'),sep=' ')   
+        check_file=os.path.join(sdir,yyyymmddii+'/mbr000/odb_ccma/CCMA/mbr000_'+obsCodeVar+'.dat')
+        if os.path.isfile(check_file):
+            data_ref=pd.read_csv(check_file,sep=' ')   
+        else:
+            print("Skipping %s for init %s, since file does not exist"%(check_file,init))
+            continue
+            
         for k,station in enumerate(data_ref['statid@hdr']):
             diff2_station=0
             fg_ctrl = data_ref['fg_depar@body'].values[k]
@@ -88,7 +94,7 @@ def calc_all_init(fdate,obstype,codetype,varno):
     for station in diff2_init['station']:
         diff2_total[station] = diff2_init[diff2_init['station']==station]['diff2'].mean()
         #print(diff2_total[station]['diff2'])
-        print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %d for all init times: %g"%(int(station),diff2_total[station]))
+        print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %s for all init times: %g"%(station,diff2_total[station]))
         total+=diff2_total[station]
     print("mean of (fg_ctrl - fg_mem)^2 over all stations: %g"%diff2_init.diff2.mean())
     print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())

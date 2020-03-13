@@ -79,6 +79,10 @@ def search_single_old():
     return obs_code
 
 def search_single(sfile):
+    '''
+    Search an HM_Date file for available variables
+    '''
+
     #this line indicates the end of a section with usable data
     end_line='----------   ---------------------------   --------'
     #all text should be searched between these two:
@@ -176,19 +180,61 @@ def run_sql(data,key_date):
     mems=[str(i).zfill(3) for i in range(0,10)]
     var_codes={'Z':1,'U':3,'T':2,'Q':7}
     cdir=os.getcwd()
+    # limit some commands because of the availability of data.
+    # For example, these types of observations occur only 4X/day
+    # Codetype = 36
+    radisonde_init=[str(i).zfill(2) for i in range(0,19,6)]
     for mem in mems:
-        os.chdir(os.path.join(key_date,"mbr"+mem+"/odb_ccma/CCMA"))
+        os.chdir(os.path.join(cdir,key_date+"/mbr"+mem+"/odb_ccma/CCMA"))
+        print("----------------------------")
         print(os.getcwd())
+        print("----------------------------")
         for k in data['Obstype'].index:
             obstype=str(data['Obstype'].loc[k])
             codetype=str(data['Codetype'].loc[k])
             varno=str(var_codes[data['Variable'].loc[k]])
             fstring='_'.join([obstype,codetype,varno])+'.dat'
             cmd='''odbsql -q "SELECT statid,varno,vertco_reference_1,obsvalue,an_depar,fg_depar,obs_error FROM hdr,body,errstat WHERE obstype == '''+obstype+''' AND codetype == '''+codetype+''' AND varno == '''+varno+ '''" |sed "s/'//g" | awk '{$2=$2};1' >& mbr'''+mem+'_'+fstring   #'''_obs_1_11_1.dat'''
-            print(cmd)
-            ret=subprocess.check_output(cmd,shell=True)
+            check_ofile="mbr"+mem+'_'+fstring
+            stuff,hh=os.path.split(key_date) #check hh 
+            if os.path.isfile(check_ofile):
+                print("Data already generated for %s"%check_ofile)
+                print("Skipping this sql command: ")
+                print(cmd)
+                continue
+            elif codetype == '36' and hh not in radisonde_init:
+                print("Data not available for Obstype/Codetype %s/%s on hour %s"%(obstype,codetype,hh))
+                print("Skipping this sql command: ")
+                print(cmd)
+                continue
+            else:
+                print("Running command: ")
+                print(cmd)
+                ret=subprocess.check_output(cmd,shell=True)
         os.chdir(cdir)
+        #print(os.getcwd())
+
+def clean_sql_output(data,key_date):
+    '''
+    clean the sql output
+    '''
+    print("Cleaning all mbr* files")
+    mems=[str(i).zfill(3) for i in range(0,10)]
+    var_codes={'Z':1,'U':3,'T':2,'Q':7}
+    cdir=os.getcwd()
+    for mem in mems:
+        os.chdir(os.path.join(cdir,key_date+"/mbr"+mem+"/odb_ccma/CCMA"))
         print(os.getcwd())
+        for k in data['Obstype'].index:
+            obstype=str(data['Obstype'].loc[k])
+            codetype=str(data['Codetype'].loc[k])
+            varno=str(var_codes[data['Variable'].loc[k]])
+            fstring='_'.join([obstype,codetype,varno])+'.dat'
+            check_ofile="mbr"+mem+'_'+fstring
+            if os.path.isfile(check_ofile):
+                print("Deleting %s"%check_ofile)
+                os.remove(check_ofile)
+        os.chdir(cdir)
 
 if __name__=='__main__':
     import argparse
@@ -202,29 +248,40 @@ if __name__=='__main__':
                         required=True)
 
     args = parser.parse_args()
+    clean_files = False # clean the output files
     #short test to carry out locally 
     #obs_types = search_single("uq_data/HM_Date_2012070100.html")
     #grab the observation codesarg for all files in this date
     obs_types,all_data = search_all_init(args.date)
     print("All the Obstype/Codetype/Variable pairs found in each file")
     for key in all_data.keys():
-        print(key)
+        #print(key)
         data=pd.DataFrame(all_data[key])
         print(data)
+        if clean_files:
+            print("Cleaning all odbsql output for %s"%key)
+            clean_sql_output(data,key)
+        else:
+            print("Calling odbsql command for %s"%key)
+            run_sql(data,key)
+        
     #for key in obs_types.keys():
     #    print(key)
     #    for ot_key in obs_types[key].keys():
     #        for ct in obs_types[key][ot_key][:]:
     #            print("Obstype: %s Codetype: %s"%(ot_key,ct))
     #    #print(obs_types[key])
-    print("---------------------------")     
-    print("Check all Obstype,Codetype,Variable combinations")
-    for key in all_data.keys():
-        #print only unique keys for this YYYYMMDDHH
-        data=pd.DataFrame(all_data[key])
-        data=data.drop_duplicates()
-        print(data)
-        print("Commands for %s"%key)
-        run_sql(data,key)
+    
+    
+    #  this will not execute all possible combinations!  
+    #print("---------------------------")     
+    #print("Check all Obstype,Codetype,Variable combinations")
+    #for key in all_data.keys():
+    #    #print only unique keys for this YYYYMMDDHH
+    #    data=pd.DataFrame(all_data[key])
+    #    data=data.drop_duplicates()
+    #    print(data)
+    #    print("Commands for %s"%key)
+    #    run_sql(data,key)
 
 

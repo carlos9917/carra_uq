@@ -19,6 +19,8 @@
 #-rw-r-----.   1 nhd dk   15946 Mar  6 18:14 mbr000_5_35_7.dat
 
 
+#Adding these:
+
 
 #call the process_odb.py script for all dates
 
@@ -27,9 +29,9 @@ days=($(seq -w 1 1 11))
 wrkdir=$PWD
 
 #obstype,codetype and varno valid combinations
-obstype=(1 1 1 1 2 2 4 5 5 5)
-codetype=(11 14 21 24 144 144 165 35 35 35)
-varno=(1 1 1 1 3 2 1 3 2 7)
+obstype=(1 1 1 1 2 2 4 5 5 5 5 5 5 2 2 2 2)
+codetype=(11 14 21 24 144 144 165 35 35 35 36 36 36 142 142 144 144) 
+varno=(1 1 1 1 3 2 1 3 2 7 2 3 7 2 3 2 3)
 for year in 2012;do
   for month in 07; do
     for day in ${days[@]}; do
