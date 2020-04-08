@@ -104,13 +104,13 @@ def calc_all_init(fdate,obstype,codetype,varno):
     print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())
     print("mean of an_dep*fg_dep for control run over all stations: %g"%an_fg_ctrl.an_fg_dep.mean())
     #dg_dep2_ctrl[str(station)+'_'+init] = fg_ctrl**2
-    print("-----------------"
+    print("-----------------")
     print("Stations summary ")
     print("total :%d"%diff2_init['station'].shape[0])
-    print("-----------------"
+    print("-----------------")
     print("station        init  ")
     for k,station in enumerate(diff2_init['station']):
-        print("%s %s"%(station,diff2_init['station'].values[k]))
+        print("%s %s"%(station,diff2_init['init'].values[k]))
     
 
 def loop_ocv(oct_comb):
