@@ -50,11 +50,11 @@ def calc_one_init(fdate):
         diff_total = diff2_station/len(mems)    
         print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %d and init 00: %g"%(station,diff_total))
 
-def calc_all_init(fdate,obstype,codetype,varno):
+def calc_all_init(fdate,obstype,codetype,varno,dom):
     obsCodeVar='_'.join([obstype,codetype,varno])
     init_times=[str(i).zfill(2) for i in range(0,22,3)]
     mems=[str(i).zfill(3) for i in range(1,10)]
-    sdir="/scratch/ms/dk/nhd/carra_uq"
+    sdir="/scratch/ms/dk/nhd/carra_uq/"+dom
     count=0
     save_init=[];save_stations=[];save_diff2=[]
     save_fg_dep2=[];save_an_fg=[]
@@ -62,6 +62,7 @@ def calc_all_init(fdate,obstype,codetype,varno):
         yyyymmddii='/'.join([fdate,init])
         check_file=os.path.join(sdir,yyyymmddii+'/mbr000/odb_ccma/CCMA/mbr000_'+obsCodeVar+'.dat')
         if os.path.isfile(check_file):
+            print("Reading %s for init %s"%(check_file,init))
             data_ref=pd.read_csv(check_file,sep=' ')   
         else:
             print("Skipping %s for init %s, since file does not exist"%(check_file,init))
@@ -90,27 +91,32 @@ def calc_all_init(fdate,obstype,codetype,varno):
     diff2_init=pd.DataFrame({'station':save_stations,'init':save_init,'diff2':save_diff2})            
     fg_dep2_ctrl=pd.DataFrame({'station':save_stations,'init':save_init, 'fg_dep2':save_fg_dep2})
     an_fg_ctrl=pd.DataFrame({'station':save_stations,'init':save_init,'an_fg_dep':save_an_fg})
+    if not diff2_init.empty and not fg_dep2_ctrl.empty and not an_fg_ctrl.empty:
 
-    #Finally calculate mean of all init times for all stations that 
-    #are present during the whole set of init times
-    diff2_total=OrderedDict()
-    total=0
-    for station in diff2_init['station']:
-        diff2_total[station] = diff2_init[diff2_init['station']==station]['diff2'].mean()
-        #print(diff2_total[station]['diff2'])
-        print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %s for all init times: %g"%(station,diff2_total[station]))
-        total+=diff2_total[station] #not using this anywhere...
-    print("mean of (fg_ctrl - fg_mem)^2 over all stations: %g"%diff2_init.diff2.mean())
-    print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())
-    print("mean of an_dep*fg_dep for control run over all stations: %g"%an_fg_ctrl.an_fg_dep.mean())
-    #dg_dep2_ctrl[str(station)+'_'+init] = fg_ctrl**2
-    print("-----------------")
-    print("Stations summary ")
-    print("total :%d"%diff2_init['station'].shape[0])
-    print("-----------------")
-    print("station        init  ")
-    for k,station in enumerate(diff2_init['station']):
-        print("%s %s"%(station,diff2_init['init'].values[k]))
+        #Finally calculate mean of all init times for all stations that 
+        #are present during the whole set of init times
+        diff2_total=OrderedDict()
+        total=0
+        for station in diff2_init['station']:
+            diff2_total[station] = diff2_init[diff2_init['station']==station]['diff2'].mean()
+            #print(diff2_total[station]['diff2'])
+            print("Ensemble mean of (fg_ctrl - fg_mem)^2 for station %s for all init times: %g"%(station,diff2_total[station]))
+            total+=diff2_total[station] #not using this anywhere...
+        print("mean of (fg_ctrl - fg_mem)^2 over all stations: %g"%diff2_init.diff2.mean())
+        print("mean of fg_dep^2 for control run over all stations: %g"%fg_dep2_ctrl.fg_dep2.mean())
+        print("mean of an_dep*fg_dep for control run over all stations: %g"%an_fg_ctrl.an_fg_dep.mean())
+        #dg_dep2_ctrl[str(station)+'_'+init] = fg_ctrl**2
+        print("-----------------")
+        print("Stations summary ")
+        print("total :%d"%diff2_init['station'].shape[0])
+        print("-----------------")
+        print("station        init  ")
+        for k,station in enumerate(diff2_init['station']):
+            print("%s %s"%(station,diff2_init['init'].values[k]))
+    else:
+        print("-------------------------")
+        print("<---- NO DATA for %s ---->"%obsCodeVar)
+        print("-------------------------")
     
 
 def loop_ocv(oct_comb):
@@ -145,6 +151,11 @@ if __name__=='__main__':
                         default='1',
                         required=False)
 
+    parser.add_argument('-dom','--domain',metavar='Domain',
+                        type=str,
+                        default='West',
+                        required=False)
+
     args = parser.parse_args()
     codetype=args.codetype
 
@@ -157,4 +168,5 @@ if __name__=='__main__':
     print("----------------------------------------------------------------------------------------")
     print("Calculating means for obstype == %s AND codetype == %s AND varno == %s and all init times"%(args.obstype,args.codetype,args.varno))
     print("----------------------------------------------------------------------------------------")
-    calc_all_init(args.date,args.obstype,args.codetype,args.varno) #'2012/07/01')
+    calc_all_init(args.date,args.obstype,args.codetype,args.varno,args.domain) #'2012/07/01')
+    print("----- Done -----")

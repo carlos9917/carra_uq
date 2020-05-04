@@ -1,13 +1,17 @@
 #!/bin/bash
 #SBATCH --error=/scratch/ms/dk/nhd/carra_uq/out/odbsql-%J.err
 #SBATCH --output=/scratch/ms/dk/nhd/carra_uq/out/odbsql-%J.out
-#SBATCH --job-name=runodbsql
+#SBATCH --job-name=120711
 
 
 module load odb
 module load python3
 days=($(seq -w 1 1 11))
-wrkdir=$PWD
+days=(11)
+dom=West
+wrkdir=$PWD/$dom
+cd $wrkdir
+cp ../search_HM_Date.py .
 for year in 2012;do
   for month in 07; do
     for day in ${days[@]}; do

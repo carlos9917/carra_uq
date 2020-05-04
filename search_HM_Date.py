@@ -18,7 +18,10 @@ def search_all_init(fdate):
         yyyymmddii='/'.join([fdate,init])
         print("searching %s"%yyyymmddii)
         fname=os.path.join(yyyymmddii,"HM_Date_"+yyyymmddii.replace('/','')+".html")
-        obs_types[yyyymmddii],all_data[yyyymmddii]=search_single(fname)
+        if os.path.isfile(fname):
+            obs_types[yyyymmddii],all_data[yyyymmddii]=search_single(fname)
+        else:
+            print("%s not available"%fname)
     return obs_types,all_data
 
 def search_all_init_old(fdate):
@@ -178,7 +181,9 @@ def run_sql(data,key_date):
     '''
     import subprocess
     mems=[str(i).zfill(3) for i in range(0,10)]
-    var_codes={'Z':1,'U':3,'T':2,'Q':7}
+    #varno will be selected from this list. These are the grib codes
+    var_codes={'Z':1,'U':3,'T':2,'Q':7,'U10':41,
+            'RAD':120} #NOTE: assuming RAD is raw radiance!!
     cdir=os.getcwd()
     # limit some commands because of the availability of data.
     # For example, these types of observations occur only 4X/day
@@ -223,21 +228,25 @@ def clean_sql_output(data,key_date):
     '''
     print("Cleaning all mbr* files")
     mems=[str(i).zfill(3) for i in range(0,10)]
-    var_codes={'Z':1,'U':3,'T':2,'Q':7}
+    var_codes={'Z':1,'U':3,'T':2,'Q':7,'U10':41,'RAD':120}#SEE comment aboveee
     cdir=os.getcwd()
     for mem in mems:
-        os.chdir(os.path.join(cdir,key_date+"/mbr"+mem+"/odb_ccma/CCMA"))
-        print(os.getcwd())
-        for k in data['Obstype'].index:
-            obstype=str(data['Obstype'].loc[k])
-            codetype=str(data['Codetype'].loc[k])
-            varno=str(var_codes[data['Variable'].loc[k]])
-            fstring='_'.join([obstype,codetype,varno])+'.dat'
-            check_ofile="mbr"+mem+'_'+fstring
-            if os.path.isfile(check_ofile):
-                print("Deleting %s"%check_ofile)
-                os.remove(check_ofile)
-        os.chdir(cdir)
+        ccma_dir=os.path.join(cdir,key_date+"/mbr"+mem+"/odb_ccma/CCMA")
+        if os.path.isdir(ccma_dir):
+            os.chdir(ccma_dir)
+            print(os.getcwd())
+            for k in data['Obstype'].index:
+                obstype=str(data['Obstype'].loc[k])
+                codetype=str(data['Codetype'].loc[k])
+                varno=str(var_codes[data['Variable'].loc[k]])
+                fstring='_'.join([obstype,codetype,varno])+'.dat'
+                check_ofile="mbr"+mem+'_'+fstring
+                if os.path.isfile(check_ofile):
+                    print("Deleting %s"%check_ofile)
+                    os.remove(check_ofile)
+            os.chdir(cdir)
+        else:    
+            print("Directory %s does not exist!"%ccma_dir)
 
 if __name__=='__main__':
     import argparse
@@ -257,25 +266,36 @@ if __name__=='__main__':
     #obs_types = search_single("uq_data/HM_Date_2012070100.html")
     #grab the observation codesarg for all files in this date
     obs_types,all_data = search_all_init(args.date)
-
-    cdir=os.getcwd()
-    print("All the Obstype/Codetype/Variable pairs found in each file")
-    for key in all_data.keys():
-        #print(key)
-        data=pd.DataFrame(all_data[key])
-        print(data)
-        if clean_files:
-            print("Cleaning all odbsql output for %s"%key)
-            clean_sql_output(data,key)
-        elif write_comb_only:    
-            #write the possible combinations of obstype codetype varno to file
-            print("Writing only the possible obs/code/var combinations")
-            write_data=data.drop_duplicates()
-            write_data.to_csv(os.path.join(cdir,key+"/"+'obs_code_var_unique.dat'),sep=" ",index=False)
-        else:
-            print("Calling odbsql command for %s"%key)
-            run_sql(data,key)
+    print("DEBUG: Length dico %d"%len(all_data))
+    print("DEBUG: Length keys %d"%len(all_data.keys()))
+    if len(all_data) == 0:
+        print("No data found!")
+        print("The dictionary is empty")
+        print(all_data)
+        print(all_data.keys())
+    else:
+        cdir=os.getcwd()
+        print("All the Obstype/Codetype/Variable pairs found in each file")
+        for key in all_data.keys():
+            print(key)
+            data=pd.DataFrame(all_data[key])
+            print(data)
+            if clean_files:
+                print("Cleaning all odbsql output for %s"%key)
+                clean_sql_output(data,key)
+            elif write_comb_only:    
+                #write the possible combinations of obstype codetype varno to file
+                print("Writing only the possible obs/code/var combinations")
+                write_data=data.drop_duplicates()
+                write_data.to_csv(os.path.join(cdir,key+"/"+'obs_code_var_unique.dat'),sep=" ",index=False)
+            elif not data.empty:
+                print("Calling odbsql command for %s"%key)
+                run_sql(data,key)
+            else:
+                print("Data frame empty for %s"%key)
+                print(data)
         
+    print("<----- search_HM_Date finished ----->")
     #for key in obs_types.keys():
     #    print(key)
     #    for ot_key in obs_types[key].keys():
