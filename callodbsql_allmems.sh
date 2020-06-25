@@ -1,19 +1,19 @@
 #!/bin/bash
 #SBATCH --error=/scratch/ms/dk/nhd/carra_uq/out/odbsql-%J.err
 #SBATCH --output=/scratch/ms/dk/nhd/carra_uq/out/odbsql-%J.out
-#SBATCH --job-name=120711
+#SBATCH --job-name=170111
 
 
 module load odb
 module load python3
 days=($(seq -w 1 1 11))
-days=(11)
+days=(10)
 dom=West
 wrkdir=$PWD/$dom
 cd $wrkdir
 cp ../search_HM_Date.py .
-for year in 2012;do
-  for month in 07; do
+for year in 2017;do
+  for month in 01; do
     for day in ${days[@]}; do
       echo "Going through $year/$month/$day"
       python3 search_HM_Date.py -d "$year/$month/$day" >& ./$year/$month/$day/out_hm_search.txt

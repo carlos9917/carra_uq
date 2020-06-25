@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --error=/scratch/ms/dk/nhd/carra_uq/out/procodb-%J.err
 #SBATCH --output=/scratch/ms/dk/nhd/carra_uq/out/procodb-%J.out
-#SBATCH --job-name=podb_2012_W
+#SBATCH --job-name=podb2017W
 
 # seeing only these files with non zero content
 #-rw-r-----.   1 nhd dk    1722 Mar  6 18:13 mbr000_1_11_1.dat
@@ -35,8 +35,8 @@ codetype=(11 14 21 24 144 144 165 35 35 35 36 36 36 142 142 144 144)
 varno=(1 1 1 1 3 2 1 3 2 7 2 3 7 2 3 2 3)
 cd $wrkdir
 cp ../process_odb.py .
-for year in 2012;do
-  for month in 07; do
+for year in 2017;do
+  for month in 01; do
     for day in ${days[@]}; do
 	    for i in "${!obstype[@]}"; do
             ofile=./$year/$month/$day/summary_${obstype[i]}_${codetype[i]}_${varno[i]}.txt
@@ -44,7 +44,7 @@ for year in 2012;do
             python3 process_odb.py -d "$year/$month/$day" -ot ${obstype[i]} -ct ${codetype[i]} -vn ${varno[i]} -dom $dom  >& $ofile
             check_file=`grep "NO DATA for" $ofile`
             if [[ ! -z $check_file ]]; then
-                echo "Deleting $ofile" 
+                echo "Deleting $ofile ---> File is empty!" 
                 rm -f $ofile
             fi    
             done
